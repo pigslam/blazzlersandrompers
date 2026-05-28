@@ -40,8 +40,8 @@
       y: randomBoundedCoordinate(radius, state.worldHeight),
       vx: direction.x,
       vy: direction.y,
-      angle: kind === "romper" ? randomBetween(0, Math.PI * 2) : 0,
-      angularVelocity: kind === "romper" ? randomBetween(-INITIAL_ANGULAR_SPEED, INITIAL_ANGULAR_SPEED) : 0,
+      angle: randomBetween(0, Math.PI * 2),
+      angularVelocity: randomBetween(-INITIAL_ANGULAR_SPEED, INITIAL_ANGULAR_SPEED),
       reproductionCooldown: 0,
     };
   }

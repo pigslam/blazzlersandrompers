@@ -62,15 +62,16 @@ function draw(ctx) {
 
   for (const creature of state.creatures) {
     if (creature.kind === "blazzler") {
-      ctx.fillStyle = "#2f80ed";
-      ctx.beginPath();
-      ctx.arc(creature.x, creature.y, creature.radius, 0, Math.PI * 2);
-      ctx.fill();
+      drawBlazzler(ctx, creature);
       continue;
     }
 
     drawRomper(ctx, creature);
   }
+}
+
+function drawBlazzler(ctx, creature) {
+  drawRegularPolygon(ctx, creature, 8, "#2f80ed");
 }
 
 function drawRomper(ctx, creature) {
@@ -81,10 +82,30 @@ function drawRomper(ctx, creature) {
   ctx.rotate(creature.angle);
   ctx.fillStyle = "#e34c4c";
   ctx.fillRect(-creature.radius, -creature.radius, size, size);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.68)";
-  ctx.fillRect(-creature.radius, -3, size, 6);
-  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
-  ctx.fillRect(creature.radius * 0.35, -creature.radius, creature.radius * 0.35, creature.radius * 0.35);
+  ctx.restore();
+}
+
+function drawRegularPolygon(ctx, creature, sides, color) {
+  ctx.save();
+  ctx.translate(creature.x, creature.y);
+  ctx.rotate(creature.angle);
+  ctx.fillStyle = color;
+  ctx.beginPath();
+
+  for (let i = 0; i < sides; i += 1) {
+    const angle = -Math.PI / 2 + (Math.PI * 2 * i) / sides;
+    const x = Math.cos(angle) * creature.radius;
+    const y = Math.sin(angle) * creature.radius;
+
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 

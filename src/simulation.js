@@ -190,10 +190,6 @@ function moveCreature(creature, deltaSeconds) {
 }
 
 function updateRotation(creature, deltaSeconds) {
-  if (creature.kind !== "romper") {
-    return;
-  }
-
   creature.angle += creature.angularVelocity * deltaSeconds;
   creature.angularVelocity *= Math.pow(ANGULAR_DAMPING, deltaSeconds * 60);
 }
@@ -466,10 +462,6 @@ function bounceApart(a, b, contact = getContact(a, b)) {
 }
 
 function applyContactTorque(creature, other, contact, strength) {
-  if (creature.kind !== "romper") {
-    return;
-  }
-
   const dx = other.x - creature.x;
   const dy = other.y - creature.y;
   const distance = Math.hypot(dx, dy) || 1;
@@ -480,10 +472,6 @@ function applyContactTorque(creature, other, contact, strength) {
 }
 
 function applyAngularImpulse(creature, impulse) {
-  if (creature.kind !== "romper") {
-    return;
-  }
-
   const momentOfInertia = Math.max(1, creature.radius * creature.radius);
   creature.angularVelocity = clamp(
     creature.angularVelocity + impulse / Math.sqrt(momentOfInertia),
