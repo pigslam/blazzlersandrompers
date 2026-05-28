@@ -119,6 +119,14 @@
     queuedSounds.push("splash");
   }
 
+  function playTadaSound() {
+    if (!soundEnabled) {
+      return;
+    }
+
+    queuedSounds.push("tada");
+  }
+
   function flushQueuedSounds() {
     if (queuedSounds.length === 0) {
       return;
@@ -138,6 +146,8 @@
         playChompSoundNow();
       } else if (sound === "splash") {
         playSplashSoundNow();
+      } else if (sound === "tada") {
+        playTadaSoundNow();
       }
     }
   }
@@ -201,6 +211,27 @@
     playNoise(0.16, 0.06);
   }
 
+  function playTadaSoundNow() {
+    playTone({ frequency: 523.25, type: "triangle", duration: 0.12, volume: 0.12, slideTo: 659.25 });
+
+    window.setTimeout(() => {
+      if (!soundEnabled) {
+        return;
+      }
+
+      playTone({ frequency: 659.25, type: "triangle", duration: 0.13, volume: 0.12, slideTo: 783.99 });
+    }, 90);
+
+    window.setTimeout(() => {
+      if (!soundEnabled) {
+        return;
+      }
+
+      playTone({ frequency: 783.99, type: "square", duration: 0.22, volume: 0.1, slideTo: 1046.5 });
+      playNoise(0.12, 0.035);
+    }, 190);
+  }
+
   Object.assign(window.Blazzlers, {
     ensureAudio,
     closeAudio,
@@ -209,6 +240,7 @@
     playBounceSound,
     playChompSound,
     playSplashSound,
+    playTadaSound,
     setSoundEnabled,
     suspendAudio,
   });

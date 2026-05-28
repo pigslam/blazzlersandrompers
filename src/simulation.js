@@ -18,8 +18,8 @@
     areTouching,
     clampBoundedCoordinate,
     createCreature,
+    getContact,
     keepInBounds,
-    overlapAmount,
     playBounceSound,
     playChompSound,
     playSplashSound,
@@ -321,17 +321,18 @@ function resolveCollisions() {
       const a = state.creatures[i];
       const b = state.creatures[j];
       const contactKey = getContactKey(a, b);
+      const contact = getContact(a, b);
 
-      if (consumedIds.has(a.id) || consumedIds.has(b.id) || !areTouching(a, b)) {
+      if (consumedIds.has(a.id) || consumedIds.has(b.id) || !contact.touching) {
         continue;
       }
 
       nextActiveContacts.add(contactKey);
 
       if (a.kind === b.kind) {
-        resolveSameKindCollision(a, b, offspring, state.activeContacts.has(contactKey));
+        resolveSameKindCollision(a, b, contact, offspring, state.activeContacts.has(contactKey));
       } else {
-        resolveOpposingKindCollision(a, b, consumedIds, state.activeContacts.has(contactKey));
+        resolveOpposingKindCollision(a, b, contact, consumedIds, state.activeContacts.has(contactKey));
       }
     }
   }
@@ -356,7 +357,7 @@ function getContactKey(a, b) {
   return a.id < b.id ? `${a.id}:${b.id}` : `${b.id}:${a.id}`;
 }
 
-function resolveSameKindCollision(a, b, offspring, wasAlreadyTouching) {
+function resolveSameKindCollision(a, b, contact, offspring, wasAlreadyTouching) {
   const canReproduce = !wasAlreadyTouching && a.reproductionCooldown === 0 && b.reproductionCooldown === 0;
 
   if (canReproduce && Math.random() < REPRODUCTION_CHANCE) {
@@ -368,9 +369,9 @@ function resolveSameKindCollision(a, b, offspring, wasAlreadyTouching) {
     a.reproductionCooldown = REPRODUCTION_COOLDOWN_SECONDS;
     b.reproductionCooldown = REPRODUCTION_COOLDOWN_SECONDS;
     playSplashSound();
-    bounceApart(a, b);
+    bounceApart(a, b, contact);
   } else {
-    bounceApart(a, b);
+    bounceApart(a, b, contact);
   }
 }
 
@@ -382,16 +383,16 @@ function createOffspring(kind, radius, x, y) {
   return creature;
 }
 
-function resolveOpposingKindCollision(a, b, consumedIds, wasAlreadyTouching) {
+function resolveOpposingKindCollision(a, b, contact, consumedIds, wasAlreadyTouching) {
   if (wasAlreadyTouching) {
-    bounceApart(a, b);
+    bounceApart(a, b, contact);
     return;
   }
 
   if (a.radius === b.radius) {
     a.radius = Math.max(1, a.radius - 1);
     b.radius = Math.max(1, b.radius - 1);
-    bounceApart(a, b);
+    bounceApart(a, b, contact);
     return;
   }
 
@@ -409,19 +410,22 @@ function randomizeVelocity(creature) {
   creature.vy = direction.y;
 }
 
-function bounceApart(a, b) {
-  const dx = b.x - a.x || randomBetween(-1, 1) || 1;
-  const dy = b.y - a.y || randomBetween(-1, 1) || 1;
-  const length = Math.hypot(dx, dy) || 1;
-  const nx = dx / length;
-  const ny = dy / length;
+function bounceApart(a, b, contact = getContact(a, b)) {
+  let nx = contact.normalX;
+  let ny = contact.normalY;
+
+  if (nx === 0 && ny === 0) {
+    const direction = randomDirection();
+    nx = direction.x;
+    ny = direction.y;
+  }
 
   a.vx = -nx;
   a.vy = -ny;
   b.vx = nx;
   b.vy = ny;
 
-  const overlap = overlapAmount(a, b);
+  const overlap = contact.overlap;
   if (overlap > 0) {
     const push = overlap / 2 + 0.5;
     a.x -= nx * push;

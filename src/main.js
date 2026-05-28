@@ -11,6 +11,7 @@
     flushQueuedSounds,
     getCounts,
     isSoundEnabled,
+    playTadaSound,
     resetSimulation,
     resizeCanvas,
     setSoundEnabled,
@@ -75,6 +76,7 @@ function handleWinner(winner) {
     state.nextRoundAt = performance.now() + AUTO_RESTART_SECONDS * 1000;
     saveSessionWins();
     updateRoundStats();
+    playTadaSound();
   }
 
   updateWinnerMessage(AUTO_RESTART_SECONDS);
@@ -103,8 +105,11 @@ function updateRunButton() {
 
 function updateSoundButton() {
   const soundEnabled = isSoundEnabled();
-  soundButton.textContent = soundEnabled ? "Sound On" : "Sound Off";
-  soundButton.setAttribute("aria-pressed", String(soundEnabled));
+  soundButton.textContent = soundEnabled ? "Sound Off" : "Sound On";
+  soundButton.setAttribute(
+    "aria-label",
+    soundEnabled ? "Turn sound off" : "Turn sound on",
+  );
 }
 
 function pauseSimulation({ hideMessage = false } = {}) {
