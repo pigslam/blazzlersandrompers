@@ -10,8 +10,10 @@
     ensureAudio,
     flushQueuedSounds,
     getCounts,
+    isSoundEnabled,
     resetSimulation,
     resizeCanvas,
+    setSoundEnabled,
     state,
     stepSimulation,
     suspendAudio,
@@ -27,6 +29,7 @@ const speedDisplay = document.getElementById("speedDisplay");
 const slowButton = document.getElementById("slowButton");
 const fastButton = document.getElementById("fastButton");
 const pauseButton = document.getElementById("pauseButton");
+const soundButton = document.getElementById("soundButton");
 const resetButton = document.getElementById("resetButton");
 const WINS_STORAGE_KEY = "blazzlers-session-wins";
 
@@ -96,6 +99,12 @@ function updateSpeedDisplay() {
 
 function updateRunButton() {
   pauseButton.textContent = state.paused && !state.readyCountdownUntil ? "Start" : "Pause";
+}
+
+function updateSoundButton() {
+  const soundEnabled = isSoundEnabled();
+  soundButton.textContent = soundEnabled ? "Sound On" : "Sound Off";
+  soundButton.setAttribute("aria-pressed", String(soundEnabled));
 }
 
 function pauseSimulation({ hideMessage = false } = {}) {
@@ -200,7 +209,10 @@ pauseButton.addEventListener("click", () => {
   }
 
   if (state.paused && state.winner) {
-    ensureAudio();
+    if (isSoundEnabled()) {
+      ensureAudio();
+    }
+
     startReadyCountdown(performance.now());
     return;
   }
@@ -213,10 +225,17 @@ pauseButton.addEventListener("click", () => {
   } else if (state.paused) {
     pauseSimulation();
   } else {
-    ensureAudio();
+    if (isSoundEnabled()) {
+      ensureAudio();
+    }
   }
 
   updateRunButton();
+});
+
+soundButton.addEventListener("click", () => {
+  setSoundEnabled(!isSoundEnabled());
+  updateSoundButton();
 });
 
 slowButton.addEventListener("click", () => {
@@ -234,7 +253,7 @@ resetButton.addEventListener("click", () => {
 });
 
 canvas.addEventListener("pointerdown", () => {
-  if (!state.paused || state.readyCountdownUntil) {
+  if (isSoundEnabled() && (!state.paused || state.readyCountdownUntil)) {
     ensureAudio();
   }
 });
@@ -242,10 +261,14 @@ canvas.addEventListener("pointerdown", () => {
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     pauseSimulation();
+    updateSoundButton();
   }
 });
 
-window.addEventListener("pagehide", closeAudio);
+window.addEventListener("pagehide", () => {
+  closeAudio();
+  updateSoundButton();
+});
 window.addEventListener("beforeunload", closeAudio);
 
 if ("ResizeObserver" in window) {
@@ -259,5 +282,6 @@ resizeCanvas(canvas, worldWrap, ctx);
 loadSessionWins();
 resetAndRender();
 updateSpeedDisplay();
+updateSoundButton();
 requestAnimationFrame(frame);
 }());

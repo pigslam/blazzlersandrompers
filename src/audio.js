@@ -4,8 +4,11 @@
   let lastTickTime = 0;
   let queuedSounds = [];
   let activeSources = new Set();
+  let soundEnabled = false;
 
   function ensureAudio() {
+    soundEnabled = true;
+
     if (!audioContext) {
       audioContext = new AudioContext();
       masterGain = audioContext.createGain();
@@ -16,6 +19,20 @@
     if (audioContext.state === "suspended") {
       audioContext.resume();
     }
+  }
+
+  function setSoundEnabled(enabled) {
+    soundEnabled = enabled;
+
+    if (soundEnabled) {
+      ensureAudio();
+    } else {
+      suspendAudio();
+    }
+  }
+
+  function isSoundEnabled() {
+    return soundEnabled;
   }
 
   function playTone({ frequency, type = "sine", duration, volume, slideTo = frequency }) {
@@ -79,14 +96,26 @@
   }
 
   function playBounceSound() {
+    if (!soundEnabled) {
+      return;
+    }
+
     queuedSounds.push("bounce");
   }
 
   function playChompSound() {
+    if (!soundEnabled) {
+      return;
+    }
+
     queuedSounds.push("chomp");
   }
 
   function playSplashSound() {
+    if (!soundEnabled) {
+      return;
+    }
+
     queuedSounds.push("splash");
   }
 
@@ -145,6 +174,7 @@
 
     audioContext = null;
     masterGain = null;
+    soundEnabled = false;
   }
 
   function playBounceSoundNow() {
@@ -175,9 +205,11 @@
     ensureAudio,
     closeAudio,
     flushQueuedSounds,
+    isSoundEnabled,
     playBounceSound,
     playChompSound,
     playSplashSound,
+    setSoundEnabled,
     suspendAudio,
   });
 }());
