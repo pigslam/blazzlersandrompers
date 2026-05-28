@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Blazzlers and Rompers</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app">
+      <section class="sim-shell" aria-label="Blazzlers and Rompers simulation">
+        <header class="toolbar">
+          <div>
+            <h1>Blazzlers and Rompers</h1>
+            <p id="stats">Blazzlers: 3 | Rompers: 3</p>
+          </div>
+          <div class="actions">
+            <div class="speed-controls" aria-label="Simulation speed controls">
+              <button id="slowButton" class="icon-button" type="button" aria-label="Decrease speed">-</button>
+              <span id="speedDisplay" class="speed-display" aria-live="polite">100%</span>
+              <button id="fastButton" class="icon-button" type="button" aria-label="Increase speed">+</button>
+            </div>
+            <button id="pauseButton" type="button">Pause</button>
+            <button id="resetButton" type="button">Reset</button>
+          </div>
+        </header>
+        <div class="world-wrap">
+          <canvas id="world" aria-label="Ecosystem simulation"></canvas>
+          <div id="winnerMessage" class="winner-message" aria-live="polite" hidden></div>
+        </div>
+      </section>
+    </main>
+    <script src="main.js"></script>
+  </body>
+</html>
