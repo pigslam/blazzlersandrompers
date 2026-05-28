@@ -32,32 +32,6 @@ const fastButton = document.getElementById("fastButton");
 const pauseButton = document.getElementById("pauseButton");
 const soundButton = document.getElementById("soundButton");
 const resetButton = document.getElementById("resetButton");
-const WINS_STORAGE_KEY = "blazzlers-session-wins";
-
-function loadSessionWins() {
-  try {
-    const storedWins = JSON.parse(sessionStorage.getItem(WINS_STORAGE_KEY));
-
-    if (
-      Number.isFinite(storedWins?.blazzlers) &&
-      Number.isFinite(storedWins?.rompers)
-    ) {
-      state.sessionWins.blazzlers = storedWins.blazzlers;
-      state.sessionWins.rompers = storedWins.rompers;
-    }
-  } catch (error) {
-    state.sessionWins.blazzlers = 0;
-    state.sessionWins.rompers = 0;
-  }
-}
-
-function saveSessionWins() {
-  try {
-    sessionStorage.setItem(WINS_STORAGE_KEY, JSON.stringify(state.sessionWins));
-  } catch (error) {
-    // The in-memory tally still works when sessionStorage is unavailable.
-  }
-}
 
 function updateStats() {
   const { blazzlers, rompers } = getCounts();
@@ -74,7 +48,6 @@ function handleWinner(winner) {
     state.sessionWins[winner] += 1;
     state.winnerRecorded = true;
     state.nextRoundAt = performance.now() + AUTO_RESTART_SECONDS * 1000;
-    saveSessionWins();
     updateRoundStats();
     playTadaSound();
   }
@@ -265,8 +238,9 @@ canvas.addEventListener("pointerdown", () => {
 
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
-    pauseSimulation();
-    updateSoundButton();
+    suspendAudio();
+  } else if (isSoundEnabled() && (!state.paused || state.readyCountdownUntil)) {
+    ensureAudio();
   }
 });
 
@@ -284,7 +258,6 @@ if ("ResizeObserver" in window) {
 }
 
 resizeCanvas(canvas, worldWrap, ctx);
-loadSessionWins();
 resetAndRender();
 updateSpeedDisplay();
 updateSoundButton();
