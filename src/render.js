@@ -81,8 +81,10 @@ function drawRomper(ctx, creature) {
   ctx.rotate(creature.angle);
   ctx.fillStyle = "#e34c4c";
   ctx.fillRect(-creature.radius, -creature.radius, size, size);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.28)";
-  ctx.fillRect(-creature.radius, -2, size, 4);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.68)";
+  ctx.fillRect(-creature.radius, -3, size, 6);
+  ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+  ctx.fillRect(creature.radius * 0.35, -creature.radius, creature.radius * 0.35, creature.radius * 0.35);
   ctx.restore();
 }
 
