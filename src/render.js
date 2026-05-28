@@ -69,14 +69,21 @@ function draw(ctx) {
       continue;
     }
 
-    ctx.fillStyle = "#e34c4c";
-    ctx.fillRect(
-      creature.x - creature.radius,
-      creature.y - creature.radius,
-      creature.radius * 2,
-      creature.radius * 2,
-    );
+    drawRomper(ctx, creature);
   }
+}
+
+function drawRomper(ctx, creature) {
+  const size = creature.radius * 2;
+
+  ctx.save();
+  ctx.translate(creature.x, creature.y);
+  ctx.rotate(creature.angle);
+  ctx.fillStyle = "#e34c4c";
+  ctx.fillRect(-creature.radius, -creature.radius, size, size);
+  ctx.fillStyle = "rgba(255, 255, 255, 0.28)";
+  ctx.fillRect(-creature.radius, -2, size, 4);
+  ctx.restore();
 }
 
 function drawChargeHalos(ctx) {

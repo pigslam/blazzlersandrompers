@@ -1,8 +1,10 @@
 (function () {
   const {
+    ANGULAR_DAMPING,
     BLACK_HOLE_RADIUS_RATIO,
     CHARGE_RANGE,
     CHARGE_STRENGTH,
+    COLLISION_TORQUE_STRENGTH,
     DECAY_AVERAGE_SIZE_RATIO,
     DECAY_CHANCE,
     DECAY_MIN_FRAGMENT_RADIUS,
@@ -10,11 +12,13 @@
     INITIAL_PER_RACE,
     INITIAL_RADIUS,
     INITIAL_RADIUS_VARIATION,
+    MAX_ANGULAR_SPEED,
     MAX_DIRECTION_FORCE,
     MIN_CHARGE_DISTANCE,
     ORBITAL_SWIRL_STRENGTH,
     REPRODUCTION_CHANCE,
     REPRODUCTION_COOLDOWN_SECONDS,
+    WALL_TORQUE_STRENGTH,
     areTouching,
     clampBoundedCoordinate,
     createCreature,
@@ -145,37 +149,53 @@ function moveCreature(creature, deltaSeconds) {
   const speed = speedForRadius(creature.radius);
   creature.x += creature.vx * speed * deltaSeconds;
   creature.y += creature.vy * speed * deltaSeconds;
+  updateRotation(creature, deltaSeconds);
 
   let bounced = false;
+  let wallSpin = 0;
 
   if (creature.x - creature.radius <= 0) {
     creature.x = creature.radius;
     creature.vx = Math.abs(creature.vx);
     bounced = true;
+    wallSpin += creature.vy;
   } else if (creature.x + creature.radius >= state.worldWidth) {
     creature.x = state.worldWidth - creature.radius;
     creature.vx = -Math.abs(creature.vx);
     bounced = true;
+    wallSpin -= creature.vy;
   }
 
   if (creature.y - creature.radius <= 0) {
     creature.y = creature.radius;
     creature.vy = Math.abs(creature.vy);
     bounced = true;
+    wallSpin -= creature.vx;
   } else if (creature.y + creature.radius >= state.worldHeight) {
     creature.y = state.worldHeight - creature.radius;
     creature.vy = -Math.abs(creature.vy);
     bounced = true;
+    wallSpin += creature.vx;
   }
 
   if (bounced) {
     creature.radius += 1;
+    applyAngularImpulse(creature, wallSpin * WALL_TORQUE_STRENGTH);
     keepInWorldBounds(creature);
     playBounceSound();
     return maybeDecayCreature(creature);
   }
 
   return null;
+}
+
+function updateRotation(creature, deltaSeconds) {
+  if (creature.kind !== "romper") {
+    return;
+  }
+
+  creature.angle += creature.angularVelocity * deltaSeconds;
+  creature.angularVelocity *= Math.pow(ANGULAR_DAMPING, deltaSeconds * 60);
 }
 
 function speedForRadius(radius) {
@@ -238,6 +258,7 @@ function splitCreatureIntoFragments(creature) {
     fragment.y = clampBoundedCoordinate(creature.y + Math.sin(angle) * distance, radius, state.worldHeight);
     fragment.vx = Math.cos(angle);
     fragment.vy = Math.sin(angle);
+    fragment.angularVelocity += randomBetween(-2, 2);
     fragment.reproductionCooldown = REPRODUCTION_COOLDOWN_SECONDS;
     fragments.push(fragment);
     remainingRadius -= radius;
@@ -379,6 +400,7 @@ function createOffspring(kind, radius, x, y) {
   const creature = createCreature(kind, radius);
   creature.x = clampBoundedCoordinate(x + randomBetween(-radius, radius), radius, state.worldWidth);
   creature.y = clampBoundedCoordinate(y + randomBetween(-radius, radius), radius, state.worldHeight);
+  creature.angularVelocity += randomBetween(-1.5, 1.5);
   creature.reproductionCooldown = REPRODUCTION_COOLDOWN_SECONDS;
   return creature;
 }
@@ -399,6 +421,7 @@ function resolveOpposingKindCollision(a, b, contact, consumedIds, wasAlreadyTouc
   const larger = a.radius > b.radius ? a : b;
   const smaller = larger === a ? b : a;
   larger.radius += Math.floor(smaller.radius / 4);
+  applyContactTorque(larger, smaller, contact, COLLISION_TORQUE_STRENGTH * 0.75);
   consumedIds.add(smaller.id);
   keepInWorldBounds(larger);
   playChompSound();
@@ -424,6 +447,11 @@ function bounceApart(a, b, contact = getContact(a, b)) {
   a.vy = -ny;
   b.vx = nx;
   b.vy = ny;
+  applyContactTorque(a, b, contact, COLLISION_TORQUE_STRENGTH);
+  applyContactTorque(b, a, {
+    normalX: -nx,
+    normalY: -ny,
+  }, COLLISION_TORQUE_STRENGTH);
 
   const overlap = contact.overlap;
   if (overlap > 0) {
@@ -435,6 +463,37 @@ function bounceApart(a, b, contact = getContact(a, b)) {
     keepInWorldBounds(a);
     keepInWorldBounds(b);
   }
+}
+
+function applyContactTorque(creature, other, contact, strength) {
+  if (creature.kind !== "romper") {
+    return;
+  }
+
+  const dx = other.x - creature.x;
+  const dy = other.y - creature.y;
+  const distance = Math.hypot(dx, dy) || 1;
+  const tangentX = -contact.normalY;
+  const tangentY = contact.normalX;
+  const offsetAlongTangent = (dx / distance) * tangentX + (dy / distance) * tangentY;
+  applyAngularImpulse(creature, offsetAlongTangent * strength);
+}
+
+function applyAngularImpulse(creature, impulse) {
+  if (creature.kind !== "romper") {
+    return;
+  }
+
+  const momentOfInertia = Math.max(1, creature.radius * creature.radius);
+  creature.angularVelocity = clamp(
+    creature.angularVelocity + impulse / Math.sqrt(momentOfInertia),
+    -MAX_ANGULAR_SPEED,
+    MAX_ANGULAR_SPEED,
+  );
+}
+
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
 }
 
   Object.assign(window.Blazzlers, {

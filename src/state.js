@@ -1,8 +1,10 @@
 (function () {
   const {
     DEFAULT_SPEED_MULTIPLIER,
+    INITIAL_ANGULAR_SPEED,
     INITIAL_RADIUS,
     randomBoundedCoordinate,
+    randomBetween,
     randomDirection,
   } = window.Blazzlers;
 
@@ -38,6 +40,8 @@
       y: randomBoundedCoordinate(radius, state.worldHeight),
       vx: direction.x,
       vy: direction.y,
+      angle: kind === "romper" ? randomBetween(0, Math.PI * 2) : 0,
+      angularVelocity: kind === "romper" ? randomBetween(-INITIAL_ANGULAR_SPEED, INITIAL_ANGULAR_SPEED) : 0,
       reproductionCooldown: 0,
     };
   }
