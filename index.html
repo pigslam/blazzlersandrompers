@@ -13,6 +13,7 @@
           <div>
             <h1>Blazzlers and Rompers</h1>
             <p id="stats">Blazzlers: 3 | Rompers: 3</p>
+            <p id="roundStats">Round: 1 | Blazzlers wins: 0 | Rompers wins: 0</p>
           </div>
           <div class="actions">
             <div class="speed-controls" aria-label="Simulation speed controls">
@@ -20,7 +21,7 @@
               <span id="speedDisplay" class="speed-display" aria-live="polite">100%</span>
               <button id="fastButton" class="icon-button" type="button" aria-label="Increase speed">+</button>
             </div>
-            <button id="pauseButton" type="button">Pause</button>
+            <button id="pauseButton" type="button">Start</button>
             <button id="resetButton" type="button">Reset</button>
           </div>
         </header>
@@ -30,6 +31,12 @@
         </div>
       </section>
     </main>
-    <script src="main.js"></script>
+    <script src="src/constants.js"></script>
+    <script src="src/geometry.js"></script>
+    <script src="src/state.js"></script>
+    <script src="src/audio.js"></script>
+    <script src="src/simulation.js"></script>
+    <script src="src/render.js"></script>
+    <script src="src/main.js"></script>
   </body>
 </html>
